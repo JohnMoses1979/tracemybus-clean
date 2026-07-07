@@ -1,0 +1,39 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://13.207.142.169/api",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://13.207.142.169/api",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://13.207.142.169/api",
+        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
+      }
+    }
+  }
+}

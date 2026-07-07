@@ -1,0 +1,88 @@
+server:
+  address: 0.0.0.0
+  port: 8080
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+  application:
+    name: tracemybus-api
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/tracemybus?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+    username: root
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: kalyanbliss27@gmail.com
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+app:
+  jwt:
+    secret: trace-my-bus-local-development-secret-key-please-change-before-production
+    expiration-days: 30
+
+  otp:
+    required: true
+    expiry-minutes: 5
+    length: 6
+
+  mail:
+    from: kalyanbliss27@gmail.com
+    from-name: TraceMyBus
+
+  superadmin:
+    name: Super Admin
+    phone: 9988776655
+    email: superadmin@tracemybus.com
+    password: 123456
+
+  cors:
+    allowed-origins: "*"
+
+  ai:
+    groq:
+      api-key: ${GROQ_API_KEY:}
+      model: ${GROQ_MODEL:llama-3.1-8b-instant}
+      chat-url: ${GROQ_CHAT_URL:https://api.groq.com/openai/v1/chat/completions}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+logging:
+  level:
+    com.tracemybus: INFO
+    org.springframework.security: WARN
+
+
