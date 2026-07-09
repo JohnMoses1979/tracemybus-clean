@@ -16,3 +16,21 @@ target/
 backend/target/
 *.jar
 *.class
+# local deployment secrets
+.env
+.env.production
+backend/.env
+
+# secrets
+.env
+.env.*
+backend/.env
+backend/.env.*
+.local-secrets/
+
+# build/cache
+node_modules/
+dist/
+.expo/
+.eas/
+backend/target/

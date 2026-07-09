@@ -1,66 +1,58 @@
 package com.tracemybus.api.config;
 
-import com.tracemybus.api.security.JwtAuthFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfigurationSource;
-
-import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
-    private final CorsConfigurationSource corsConfigurationSource;
-    private final ObjectMapper objectMapper;
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(eh -> eh
-                .authenticationEntryPoint((req, res, ex) -> {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    res.setContentType("application/json");
-                    res.getWriter().write(objectMapper.writeValueAsString(
-                            Map.of("ok", false, "msg", "Not authorized. Token missing or invalid.")
-                    ));
-                })
-            )
+            .cors(Customizer.withDefaults())
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 .requestMatchers(
-                    "/",
-                    "/api/health",
+                    "/api/auth/**",
                     "/api/otp/**",
-                    "/api/auth/login",
-                    "/api/auth/register/**",
-                    "/api/auth/forgot-password/**",
+                    "/api/email/**",
+                    "/api/register/**",
                     "/api/public/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/api-docs/**",
-                    "/v3/api-docs/**",
+                    "/api/superadmin/**",
+                    "/api/admin/register/**",
+                    "/api/schools/register/**",
+                    "/api/drivers/register/**",
+                    "/api/parents/register/**",
+                    "/api/employees/register/**",
                     "/ws/**",
-                    "/api/chat",
-                    "/api/chat/**"
+                    "/topic/**",
+                    "/app/**",
+                    "/error"
                 ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                .anyRequest().permitAll()
+            );
 
         return http.build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

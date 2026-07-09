@@ -2,7 +2,6 @@
   "expo": {
     "name": "TraceMyBus",
     "slug": "tracemybus",
-    "owner": "kalyanag",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,18 +23,19 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "POST_NOTIFICATIONS",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
-        "CAMERA",
-        "READ_MEDIA_IMAGES",
-        "READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.bliss.tracemybus"
     },
@@ -70,7 +70,7 @@
     "scheme": "tracemybus",
     "extra": {
       "eas": {
-        "projectId": "dd7453fa-230a-4f07-b7b8-80cdb68ea3ab"
+        "projectId": "6dd5bf3e-d244-445f-99c8-c30af9240a0e"
       }
     }
   }

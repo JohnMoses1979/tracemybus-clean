@@ -1,0 +1,44 @@
+name: Deploy TraceMyBus
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            cd /home/ubuntu/tracemybus-clean
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker compose down
+            docker compose up -d --build
+
+            sleep 25
+
+            echo "Checking backend..."
+            curl -f http://localhost:8080/ || exit 1
+
+            echo "Checking public orgs..."
+            curl -f http://localhost:8080/api/public/orgs || exit 1
+
+            docker image prune -f
+
+            echo "Deployment completed successfully"

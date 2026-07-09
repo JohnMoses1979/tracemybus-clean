@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: tracemybus-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tracemybus
+      MYSQL_USER: tracemybus_user
+      MYSQL_PASSWORD: TraceMyBus@123
+      MYSQL_ROOT_PASSWORD: RootTraceMyBus@123
+    volumes:
+      - tracemybus_mysql_data:/var/lib/mysql
+    expose:
+      - "3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pRootTraceMyBus@123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tracemybus-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_BASE_URL: /api
+    container_name: tracemybus-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+
+volumes:
+  tracemybus_mysql_data:

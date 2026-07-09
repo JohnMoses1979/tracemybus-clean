@@ -10,7 +10,7 @@ spring:
     name: tracemybus-api
 
   datasource:
-    url: jdbc:mysql://localhost:3306/tracemybus?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+    url: jdbc:mysql://15.168.41.36:3306/tracemybus?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
