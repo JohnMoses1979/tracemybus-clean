@@ -1,39 +1,28 @@
 package com.tracemybus.api.controller;
 
-import java.security.SecureRandom;
-import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
+import com.tracemybus.api.service.OtpService;
 import com.twilio.Twilio;
-import com.twilio.exception.ApiException;
 import com.twilio.rest.verify.v2.service.Verification;
 import com.twilio.rest.verify.v2.service.VerificationCheck;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/otp")
 @CrossOrigin(origins = "*")
 public class OtpController {
 
-    private final JavaMailSender mailSender;
-    private final SecureRandom random = new SecureRandom();
-    private final Map<String, OtpRecord> emailOtpStore = new ConcurrentHashMap<>();
+    // OtpService handles email OTP via DB (OtpVerification table).
+    // This ensures consumeVerifiedEmailOtp() in AuthService can find the record.
+    private final OtpService otpService;
 
-    public OtpController(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public OtpController(OtpService otpService) {
+        this.otpService = otpService;
     }
-
-    @Value("${spring.mail.username:}")
-    private String mailFrom;
-
-    @Value("${app.otp.expiry-minutes:5}")
-    private int expiryMinutes;
 
     @Value("${TWILIO_ACCOUNT_SID:}")
     private String accountSid;
@@ -56,10 +45,16 @@ public class OtpController {
             value(body, "phoneNumber"),
             value(body, "to")
         );
+        String purpose = firstNonBlank(value(body, "purpose"), "register");
 
         try {
             if (!email.isBlank()) {
-                return sendEmailOtp(email);
+                // Use OtpService so the OTP record is persisted in DB.
+                otpService.sendOtpToEmail(email, purpose);
+                return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "message", "OTP sent successfully to email"
+                ));
             }
 
             if (!phone.isBlank()) {
@@ -71,6 +66,11 @@ public class OtpController {
                 "message", "Email or phone number is required"
             ));
 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "ok", false,
+                "message", e.getMessage()
+            ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
                 "ok", false,
@@ -88,6 +88,7 @@ public class OtpController {
             value(body, "phoneNumber"),
             value(body, "to")
         );
+        String purpose = firstNonBlank(value(body, "purpose"), "register");
 
         String otp = firstNonBlank(
             value(body, "otp"),
@@ -96,7 +97,13 @@ public class OtpController {
 
         try {
             if (!email.isBlank()) {
-                return verifyEmailOtp(email, otp);
+                // Use OtpService so verifiedAt is stamped in the DB record.
+                // AuthService.consumeVerifiedEmailOtp() looks for verifiedAt IS NOT NULL.
+                otpService.verifyOtpByEmail(email, otp, purpose);
+                return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "message", "OTP verified successfully"
+                ));
             }
 
             if (!phone.isBlank()) {
@@ -108,78 +115,17 @@ public class OtpController {
                 "message", "Email/phone and OTP are required"
             ));
 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "ok", false,
+                "message", e.getMessage()
+            ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
                 "ok", false,
                 "message", "OTP verification failed: " + e.getMessage()
             ));
         }
-    }
-
-    private ResponseEntity<Map<String, Object>> sendEmailOtp(String email) {
-        validateMailConfig();
-
-        String otp = String.format("%06d", random.nextInt(1_000_000));
-        Instant expiresAt = Instant.now().plusSeconds(expiryMinutes * 60L);
-
-        emailOtpStore.put(email.toLowerCase(), new OtpRecord(otp, expiresAt));
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
-        message.setTo(email);
-        message.setSubject("TraceMyBus Email OTP");
-        message.setText(
-            "Your TraceMyBus OTP is: " + otp + "\n\n" +
-            "This OTP is valid for " + expiryMinutes + " minutes.\n\n" +
-            "Do not share this OTP with anyone."
-        );
-
-        mailSender.send(message);
-
-        return ResponseEntity.ok(Map.of(
-            "ok", true,
-            "message", "OTP sent successfully to email"
-        ));
-    }
-
-    private ResponseEntity<Map<String, Object>> verifyEmailOtp(String email, String otp) {
-        if (otp == null || otp.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "ok", false,
-                "message", "OTP is required"
-            ));
-        }
-
-        OtpRecord record = emailOtpStore.get(email.toLowerCase());
-
-        if (record == null) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "ok", false,
-                "message", "OTP not found or expired. Please send OTP again."
-            ));
-        }
-
-        if (record.expiresAt().isBefore(Instant.now())) {
-            emailOtpStore.remove(email.toLowerCase());
-            return ResponseEntity.badRequest().body(Map.of(
-                "ok", false,
-                "message", "OTP expired. Please send OTP again."
-            ));
-        }
-
-        if (!record.otp().equals(otp)) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "ok", false,
-                "message", "Invalid OTP"
-            ));
-        }
-
-        emailOtpStore.remove(email.toLowerCase());
-
-        return ResponseEntity.ok(Map.of(
-            "ok", true,
-            "message", "OTP verified successfully"
-        ));
     }
 
     private ResponseEntity<Map<String, Object>> sendSmsOtp(String phone) {
@@ -236,12 +182,6 @@ public class OtpController {
         ));
     }
 
-    private void validateMailConfig() {
-        if (mailFrom == null || mailFrom.isBlank()) {
-            throw new IllegalStateException("SPRING_MAIL_USERNAME missing");
-        }
-    }
-
     private void validateTwilioConfig() {
         if (accountSid == null || accountSid.isBlank()) {
             throw new IllegalStateException("TWILIO_ACCOUNT_SID missing");
@@ -275,6 +215,4 @@ public class OtpController {
         }
         return "";
     }
-
-    private record OtpRecord(String otp, Instant expiresAt) {}
 }
