@@ -1,38 +1,26 @@
 {
   "cli": {
-    "version": ">= 12.0.0",
-    "appVersionSource": "remote"
+    "version": ">= 12.0.0"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://15.168.41.36:8080/api",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
-      }
-    },
     "preview": {
-      "distribution": "internal",
       "android": {
         "buildType": "apk"
       },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "http://15.168.41.36:8080/api",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
+        "REACT_APP_API_BASE_URL": "http://15.168.41.36:8080/api",
+        "VITE_API_BASE_URL": "http://15.168.41.36:8080/api"
       }
     },
     "production": {
-      "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "http://15.168.41.36:8080/api",
-        "EXPO_PUBLIC_ANDROID_PACKAGE": "com.bliss.tracemybus"
+        "REACT_APP_API_BASE_URL": "http://15.168.41.36:8080/api",
+        "VITE_API_BASE_URL": "http://15.168.41.36:8080/api"
       }
     }
   }

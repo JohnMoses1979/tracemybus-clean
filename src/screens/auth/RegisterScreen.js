@@ -363,11 +363,9 @@ export default function RegisterScreen() {
       appAlert("Invalid Phone", "Organisation phone must be exactly 10 digits.");
       return;
     }
-    if (!adminOtpVerified) {
-      appAlert("OTP Required", "Please verify your email OTP before submitting.");
-      return;
-    }
-
+    
+    // Removed stale admin OTP submit guard.
+    // OTP verification is handled by /api/otp/verify.
     const registeredPhone = cleanPhone(adminPhone);
     const registeredEmail = cleanEmail(adminEmail);
     const result = await registerAdminRequest({
@@ -395,11 +393,9 @@ export default function RegisterScreen() {
     if (!validateEmailPhoneAndPassword({
       emailValue: email, phoneValue: phone, passwordValue: pass, confirmValue: confirmPass,
     })) return;
-    if (!otpVerified) {
-      appAlert("OTP Required", "Please verify your email OTP before submitting.");
-      return;
-    }
-
+    
+    // Removed stale user OTP submit guard.
+    // Backend /api/otp/verify validates OTP before registration.
     const finalChildren = (role === "school" || role === "college") ? normalizedChildren() : [];
     if ((role === "school" || role === "college") && finalChildren.length === 0) {
       appAlert("Child Required", "Please add at least one child detail.");
