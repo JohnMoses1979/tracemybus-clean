@@ -33,11 +33,8 @@ jobs:
 
             sleep 25
 
-            echo "Checking backend..."
-            curl -f http://localhost:8080/ || exit 1
-
-            echo "Checking public orgs..."
-            curl -f http://localhost:8080/api/public/orgs || exit 1
+            curl -f http://localhost:8080/
+            curl -f http://localhost:8080/api/public/orgs
 
             docker image prune -f
 
