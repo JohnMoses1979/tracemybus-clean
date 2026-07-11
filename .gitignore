@@ -34,3 +34,9 @@ dist/
 .expo/
 .eas/
 backend/target/
+
+# secrets
+.env
+.env.*
+backend/.env
+backend/.env.*
